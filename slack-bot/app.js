@@ -6,7 +6,7 @@ const { App, LogLevel } = require('@slack/bolt')
 require('dotenv').config()
 const SlackViews = require('./modules/SlackViews.js')
 const ODA = require('./modules/OauthDeviceAuthorization.js')
-const DemoApi = require('./modules/DemoApi.js')
+const DemoApiClient = require('./modules/DemoApiClient.js')
 
 const auth0Config = {
   domain: process.env.AUTH0_DOMAIN,
@@ -16,7 +16,7 @@ const auth0Config = {
 }
 const OauthDeviceAuthorization = new ODA(auth0Config)
 
-const demoApi = new DemoApi()
+const demoApi = new DemoApiClient()
 
 const slack = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,

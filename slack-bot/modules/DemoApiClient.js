@@ -1,6 +1,6 @@
 const axios = require('axios')
 
-class DemoApi {
+class DemoApiClient {
 
   setAccessToken(access_token){
     this.access_token = access_token
@@ -25,4 +25,4 @@ class DemoApi {
   }
 }
 
-module.exports = DemoApi;
+module.exports = DemoApiClient;
