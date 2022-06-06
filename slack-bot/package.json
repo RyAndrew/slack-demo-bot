@@ -1,0 +1,17 @@
+{
+  "name": "Slack-Bot-Device-Authorization",
+	"version": "0.0.1",
+	"private": true,
+	"main": "app.js",
+  "dependencies": {
+    "@slack/bolt": "^3.11.1",
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.1",
+    "openid-client": "^5.1.6",
+    "qs": "^6.10.3",
+    "request": "^2.88.2"
+  },
+	"scripts": {
+		"start": "node app.js"
+	}
+}
