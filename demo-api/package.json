@@ -2,7 +2,7 @@
   "name": "demo-api",
   "version": "0.0.1",
   "description": "Manage all your demos in one place",
-	"main": "app.js",
+	"main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
