@@ -155,7 +155,7 @@ async sendBlocks(userId, text, blocks){
   })
 }
 
-async showAuth(userId){
+async sendAuthStateDm(userId){
 
   const user = await this.userRead(userId)
 
@@ -196,7 +196,7 @@ setupListeners(){
     console.log('view auth-device-code-view view_submission')
     await ack()
     
-    this.showAuth(body.user.id)
+    this.sendAuthStateDm(body.user.id)
 
     //check if there is a task to resume for after authentication
     if(body.view && body.view.private_metadata){
@@ -226,7 +226,7 @@ setupListeners(){
   this.slack.action( 'home-show-auth', async ({body, ack}) => {
     console.log('action home-show-auth')
     await ack()
-    this.showAuth(body.user.id)
+    this.sendAuthStateDm(body.user.id)
   })
   this.slack.action( 'home-login', async ({body, ack, client}) => {
     console.log('action home-create-demo')
@@ -238,7 +238,7 @@ setupListeners(){
   this.slack.shortcut( 'shortcut_show_auth', async ({body, ack, client}) => {
     await ack()
     console.log('shortcut_show_auth')
-    this.showAuth(body.user.id)
+    this.sendAuthStateDm(body.user.id)
   })
   
   this.slack.shortcut( 'shortcut_demo_create', async ({body, ack, client}) => {
@@ -278,7 +278,7 @@ setupListeners(){
       case 'read':
         break
       case 'showauth':
-        this.showAuth(body.user_id)
+        this.sendAuthStateDm(body.user_id)
         break
       case 'login':
         this.authenticate(client, body.user_id, body.trigger_id)
