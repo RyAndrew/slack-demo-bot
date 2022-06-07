@@ -125,8 +125,25 @@ async demoList(client, userId, triggerId){
 
   this.sendBlocks(user.userId, 'List of Apps', slackBlocks)
 }
-async demoCreate(client, userId, triggerId){
-  await this.demoList(client, userId, triggerId)
+async demoCreateShowModal(client, userId, triggerId){
+  await this.sendDm(userId, 'Creating Demo')
+
+  const user = await this.authenticate(client, userId, triggerId, 'demoCreateShowModal')
+  if(user === null){ return; }
+
+  client.views.open({trigger_id: triggerId, view:SlackViews.createAppView})
+}
+async demoCreate(client, userId, triggerId, appName){
+  const user = await this.authenticate(client, userId, triggerId, 'demoCreateShowModal')
+  if(user === null){ return; }
+
+  this.DemoApiClient.setAccessToken(user.tokens.access_token)
+  let response = await this.DemoApiClient.create({
+    name:appName
+  })
+  
+  console.log(response)
+  await this.sendDm(userId, 'Created Successfully!')
 }
 
 async demoDelete(client, userId, triggerId, client_id){
@@ -182,15 +199,24 @@ resumeTask(task, body, client){
   switch(task){
     case 'demoList':
       this.demoList(client, body.user.id, body.trigger_id)
+      break;
+    case 'demoCreateShowModal':
+      this.demoCreateShowModal(client, body.user.id, body.trigger_id)
   }
 }
 
 setupListeners(){
-  this.slack.view( 'tenant-info', async ({payload, ack, client}) => {
-    await ack()
-      console.log('tenant-info view_submission',payload)
-  })
+  // this.slack.view( 'tenant-info', async ({payload, ack, client}) => {
+  //   await ack()
+  //   console.log('tenant-info view_submission',payload)
+  // })
   
+  this.slack.view( 'create-app', async ({body, ack, client}) => {
+    console.log('view create-app view_submission',body.view.state.values )
+    await ack()
+    this.demoCreate(client, body.user.id, body.trigger_id, body.view.state.values['create-app-name']['create-app-name'].value)
+  })
+
   //main device auth page submit
   this.slack.view( 'auth-device-code-view', async ({body, ack, client}) => {
     console.log('view auth-device-code-view view_submission')
@@ -210,7 +236,7 @@ setupListeners(){
   this.slack.action( 'home-create-demo', async ({body, ack, client}) => {
     console.log('action home-create-demo')
     await ack()
-    this.demoCreate(client, body.user.id, body.trigger_id)
+    this.demoCreateShowModal(client, body.user.id, body.trigger_id)
   })
   this.slack.action( 'list-delete-app', async ({body, ack, client}) => {
     console.log('action list-delete-app body',body)
@@ -245,7 +271,7 @@ setupListeners(){
     await ack()
     console.log('shortcut_demo_create')
   
-    this.demoCreate(client, body.user.id, body.trigger_id)
+    this.demoCreateShowModal(client, body.user.id, body.trigger_id)
   })
   
   this.slack.shortcut( 'shortcut_demo_list', async ({body, ack, client}) => {
@@ -272,8 +298,7 @@ setupListeners(){
         await say('valid prompts are: showauth, login, create, read, list, update, delete')
         break
       case 'create':
-        console.log('demos create!')
-        this.demoCreate(client, body.user_id, body.trigger_id)
+        this.demoCreateShowModal(client, body.user_id, body.trigger_id)
         break
       case 'read':
         break

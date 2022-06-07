@@ -4,55 +4,83 @@ class SlackViews {
     "type": "modal",
     "callback_id": "auth-device-code-view",
     "title": {
-    "type": "plain_text",
-    "text": "Scan QR or Login"
+      "type": "plain_text",
+      "text": "Scan QR or Login"
     },
     "submit": {
-    "type": "plain_text",
-    "text": "I Logged In Successfully"
+      "type": "plain_text",
+      "text": "I Logged In Successfully"
     },
     "blocks": [
-    {
-        "type": "section",
-        "text": {
-        "type": "mrkdwn",
-        "text": "Click Here to Login"
-        },
-        "accessory": {
-        "type": "button",
-        "text": {
-            "type": "plain_text",
-            "text": "Login",
-            "emoji": true
-        },
-        "value": "click_me_123",
-        "url": "https://okta.com",
-        "action_id": "button-action"
-        }
-    },
-    {
-        "type": "section",
-        "text": {
+      {
+          "type": "section",
+          "text": {
+          "type": "mrkdwn",
+          "text": "Click Here to Login"
+          },
+          "accessory": {
+          "type": "button",
+          "text": {
+              "type": "plain_text",
+              "text": "Login",
+              "emoji": true
+          },
+          "value": "click_me_123",
+          "url": "https://okta.com",
+          "action_id": "button-action"
+          }
+      },
+      {
+          "type": "section",
+          "text": {
+          "type": "plain_text",
+          "text": "Use Code ",
+          "emoji": true
+          }
+      },
+      {
+          "type": "section",
+          "text": {
+          "type": "plain_text",
+          "text": "Scan this code to Login",
+          "emoji": true
+          }
+      },
+      {
+          "type": "image",
+          "image_url": "https://qrurlhere",
+          "alt_text": "QR Code"
+      }
+    ]
+  }
+  
+  static createAppView = {
+    "type": "modal",
+    "callback_id": "create-app",
+    "title": {
         "type": "plain_text",
-        "text": "Use Code ",
-        "emoji": true
-        }
+        "text": "Create App"
     },
-    {
-        "type": "section",
-        "text": {
+    "submit": {
         "type": "plain_text",
-        "text": "Scan this code to Login",
-        "emoji": true
-        }
+        "text": "Submit"
     },
+      "blocks": [
         {
-            "type": "image",
-            "image_url": "https://qrurlhere",
-            "alt_text": "QR Code"
+          "type": "input",
+          "block_id": "create-app-name",
+          "element": {
+            "type": "plain_text_input",
+            "action_id": "create-app-name"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Name of App",
+            "emoji": true
+          }
         }
-]
-}
+      ]
+  }
 
   static tenantInputView = {
     "type": "modal",

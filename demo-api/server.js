@@ -7,6 +7,8 @@ const cors = require('cors')
 const ManagementClient = require('auth0').ManagementClient
 
 require('dotenv').config()
+	
+app.use(express.json());  
 
 const auth0 = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
@@ -42,14 +44,23 @@ app.get('/api/v1/private', checkJwt, function(req, res) {
 app.delete('/api/v1/demo/:clientId([A-Za-z0-9]{32})', checkJwt, requiredScopes('manage:demos'), async function(req, res) {
 
   console.log('delete clientId',req.params.clientId)
-  let response = await auth0.deleteClient({ client_id: req.params.clientId })
+  const response = await auth0.deleteClient({ client_id: req.params.clientId })
 
   res.json(response)
 })
 
+app.post('/api/v1/demo', checkJwt, requiredScopes('manage:demos'), async function(req, res) {
+
+  console.log('create app',req.body)
+
+  const response = await auth0.createClient(req.body)
+
+  res.json({"success":true})
+})
+
 app.get('/api/v1/demo', checkJwt, requiredScopes('read:demos'), async function(req, res) {
 
-  let clients = await auth0.getClients()
+  const clients = await auth0.getClients()
   console.log('clients',clients)
   let output = []
   clients.forEach(function(val){
