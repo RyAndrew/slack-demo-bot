@@ -1,4 +1,5 @@
 const { Issuer } = require('openid-client')
+const SlackViews = require('./SlackViews.js')
 
 class OauthDeviceAuthorization {
 
@@ -35,7 +36,7 @@ class OauthDeviceAuthorization {
     const { verification_uri_complete, user_code, expires_in } = DeviceCodeResponse
   
     const qrImagePrefix = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl="
-    let authDeviceCodeView = OauthDeviceAuthorization.authDeviceCodeView
+    let authDeviceCodeView = SlackViews.authDeviceCodeView
     authDeviceCodeView.private_metadata = JSON.stringify({resumeTask:resumeTask})
     authDeviceCodeView.blocks[3].image_url = qrImagePrefix + encodeURIComponent(verification_uri_complete)
     authDeviceCodeView.blocks[0].accessory.url = verification_uri_complete
@@ -71,59 +72,6 @@ class OauthDeviceAuthorization {
     console.error('failed to get tokens')
   }
   
-  static authDeviceCodeView = {
-    "type": "modal",
-    "callback_id": "auth-device-code-view",
-    "title": {
-      "type": "plain_text",
-      "text": "Scan QR or Login"
-    },
-    "submit": {
-      "type": "plain_text",
-      "text": "I Logged In Successfully"
-    },
-    "blocks": [
-      {
-          "type": "section",
-          "text": {
-          "type": "mrkdwn",
-          "text": "Click Here to Login"
-          },
-          "accessory": {
-          "type": "button",
-          "text": {
-              "type": "plain_text",
-              "text": "Login",
-              "emoji": true
-          },
-          "value": "click_me_123",
-          "url": "https://okta.com",
-          "action_id": "button-action"
-          }
-      },
-      {
-          "type": "section",
-          "text": {
-          "type": "plain_text",
-          "text": "Use Code ",
-          "emoji": true
-          }
-      },
-      {
-          "type": "section",
-          "text": {
-          "type": "plain_text",
-          "text": "Scan this code to Login",
-          "emoji": true
-          }
-      },
-      {
-          "type": "image",
-          "image_url": "https://qrurlhere",
-          "alt_text": "QR Code"
-      }
-    ]
-  }
 }
 
 module.exports = OauthDeviceAuthorization
