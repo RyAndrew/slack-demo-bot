@@ -103,9 +103,9 @@ async showAuth(userId){
 
   let authenticatedUserNote = 'Not Authenticated'
   if(user.authenticated){
-    authenticatedUserNote = `Authenticated as ${user.tokenClaims.nickname} ${user.tokenClaims.email}`
+    authenticatedUserNote = `User: ${user.tokenClaims.nickname} / ${user.tokenClaims.email}`
   }
-  this.sendDm(userId, `DemoApi - ${authenticatedUserNote}\nSlack User ${user.slackProfile.profile.first_name} - ${user.slackProfile.profile.email}`)
+  this.sendDm(userId, `DemoApi ${authenticatedUserNote}\nSlack User: ${user.slackProfile.profile.first_name} / ${user.slackProfile.profile.email}`)
 }
 
 async readSlackUserProfile(userId){
@@ -115,8 +115,7 @@ async readSlackUserProfile(userId){
   })
   console.timeEnd('this.slack.client.users.info')
   if(result.ok !== true){
-      console.error('Error looking up user id '+userId)
-      return
+      throw 'Error looking up user id '+userId
   }
   return result.user
 }
