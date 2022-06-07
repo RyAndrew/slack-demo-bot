@@ -42,10 +42,15 @@ app.get('/api/v1/demo', checkJwt, requiredScopes('read:demos'), async function(r
   let clients = await auth0.getClients();
   console.log('clients',clients)
   let output = [];
-  // clients.foreach(function(val){
-  //   output.push({name:val.name,client_id:val.client_id})
-  // })
-  res.json(clients);
+  clients.forEach(function(val){
+    //filter default apps
+    if(['All Applications','Default Application'].indexOf(val.name) >= 0){
+      return;
+    }
+
+    output.push({name:val.name,client_id:val.client_id})
+  })
+  res.json(output);
 });
 
 app.use(function(err, req, res, next){
