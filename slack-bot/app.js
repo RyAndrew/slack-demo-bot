@@ -245,7 +245,7 @@ setupListeners(){
     
   })
   this.slack.action( 'home-list', async ({body, ack, client}) => {
-    console.log('action home-create-demo')
+    console.log('action home-list')
     await ack()
     this.demoList(client, body.user.id, body.trigger_id)
   })
@@ -255,7 +255,7 @@ setupListeners(){
     this.sendAuthStateDm(body.user.id)
   })
   this.slack.action( 'home-login', async ({body, ack, client}) => {
-    console.log('action home-create-demo')
+    console.log('action home-login')
     await ack()
     this.authenticate(client, body.user.id, body.trigger_id)
   })
