@@ -2,15 +2,26 @@ const axios = require('axios')
 
 class DemoApiClient {
 
+  constructor(baseUrl){
+    this.baseUrl = baseUrl
+  }
   setAccessToken(access_token){
     this.access_token = access_token
   }
   
-  async readAllClients(request){
+  async delete(clientId){
+
+    const response = this.apiCall({
+      method: 'delete',
+      url: this.baseUrl+'/api/v1/demo/'+clientId
+    })
+    return response;
+  }
+  async readAllClients(){
 
     const response = this.apiCall({
       method: 'get',
-      url: 'http://localhost:3000/api/v1/demo'
+      url: this.baseUrl+'/api/v1/demo'
     })
     return response;
   }

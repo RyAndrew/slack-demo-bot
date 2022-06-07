@@ -55,7 +55,7 @@ userUpdate(user){
 
 async authenticate(client, userId, triggerId, resumeTask){
   let user = await this.userRead(userId)
-  console.log(user)
+  
   if(!user.authenticated){
 
     //adds auth data to user
@@ -77,23 +77,80 @@ async authenticate(client, userId, triggerId, resumeTask){
 async demoList(client, userId, triggerId){
   await this.sendDm(userId, 'List Demo Apps / Clients')
 
-  const user = await this.authenticate(client, userId, triggerId)
+  const user = await this.authenticate(client, userId, triggerId, 'demoList')
   if(user === null){ return; }
 
   this.DemoApiClient.setAccessToken(user.tokens.access_token)
   let clients = await this.DemoApiClient.readAllClients()
   console.log('list: ',clients)
 
-  this.sendDm(user.userId, 'list:\n'+JSON.stringify(clients,null,4))
+  let slackBlocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": ":mag: List of your *Demo Apps*"
+      }
+    },
+    {
+      "type": "divider"
+    }
+  ]
+
+  clients.forEach(function(client){
+    slackBlocks.push(
+      {
+        "type": "section",
+        "text": {
+          "type": "plain_text",
+          "text": client.name
+        },
+        "accessory": {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Delete",
+            "emoji": true
+          },
+          "value": client.client_id,
+          "action_id": "list-delete-app"
+        }
+      }
+    )
+
+  })
+
+  //console.log(JSON.stringify(slackBlocks,null,4));
+
+  this.sendBlocks(user.userId, 'List of Apps', slackBlocks)
 }
 async demoCreate(client, userId, triggerId){
   await this.demoList(client, userId, triggerId)
+}
+
+async demoDelete(client, userId, triggerId, client_id){
+  await this.sendDm(userId, 'Deleting Demo client_id '+client_id)
+
+  const user = await this.authenticate(client, userId, triggerId)
+  if(user === null){ return; }
+
+  this.DemoApiClient.setAccessToken(user.tokens.access_token)
+  this.DemoApiClient.delete(client_id)
+
+  this.demoList(client, userId, triggerId)
 }
 
 async sendDm(userId, text){
   return await this.slack.client.chat.postMessage({
     channel: userId,
     text: text
+  })
+}
+async sendBlocks(userId, text, blocks){
+  return await this.slack.client.chat.postMessage({
+    channel: userId,
+    text:text,
+    blocks: blocks
   })
 }
 
@@ -120,6 +177,13 @@ async readSlackUserProfile(userId){
   return result.user
 }
 
+resumeTask(task, body, client){
+  switch(task){
+    case 'demoList':
+      this.demoList(client, body.user.id, body.trigger_id)
+  }
+}
+
 setupListeners(){
   this.slack.view( 'tenant-info', async ({payload, ack, client}) => {
     await ack()
@@ -128,16 +192,30 @@ setupListeners(){
   
   //main device auth page submit
   this.slack.view( 'auth-device-code-view', async ({body, ack, client}) => {
-    console.log('view auth-device-code-view view_submission body',body)
+    console.log('view auth-device-code-view view_submission')
     await ack()
-    //TODO add resumeTask handling here
+    
     this.showAuth(body.user.id)
+
+    //check if there is a task to resume for after authentication
+    if(body.view && body.view.private_metadata){
+        let private_metadata = JSON.parse(body.view.private_metadata)
+        if(private_metadata.resumeTask){
+          this.resumeTask(private_metadata.resumeTask, body, client)
+        }
+    }
   })
   
   this.slack.action( 'home-create-demo', async ({body, ack, client}) => {
     console.log('action home-create-demo')
     await ack()
     this.demoCreate(client, body.user.id, body.trigger_id)
+  })
+  this.slack.action( 'list-delete-app', async ({body, ack, client}) => {
+    console.log('action list-delete-app body',body)
+    await ack()
+    this.demoDelete(client, body.user.id, body.trigger_id, body.actions[0].value)
+    
   })
   this.slack.action( 'home-list', async ({body, ack, client}) => {
     console.log('action home-create-demo')
@@ -211,7 +289,7 @@ setupListeners(){
         break
       case 'settenant':
         client.views.open({trigger_id: body.trigger_id, view:tenantInputView})
-        break;
+        break
     }
   
   })

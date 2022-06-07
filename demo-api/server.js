@@ -39,6 +39,14 @@ app.get('/api/v1/private', checkJwt, function(req, res) {
   })
 })
 
+app.delete('/api/v1/demo/:clientId([A-Za-z0-9]{32})', checkJwt, requiredScopes('read:demos'), async function(req, res) {
+
+  console.log('delete clientId',req.params.clientId)
+  let response = await auth0.deleteClient({ client_id: req.params.clientId })
+
+  res.json(response)
+})
+
 app.get('/api/v1/demo', checkJwt, requiredScopes('read:demos'), async function(req, res) {
 
   let clients = await auth0.getClients()

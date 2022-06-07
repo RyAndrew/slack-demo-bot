@@ -36,7 +36,7 @@ class OauthDeviceAuthorization {
   
     const qrImagePrefix = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl="
     let authDeviceCodeView = OauthDeviceAuthorization.authDeviceCodeView
-    authDeviceCodeView.resumeTask = resumeTask
+    authDeviceCodeView.private_metadata = JSON.stringify({resumeTask:resumeTask})
     authDeviceCodeView.blocks[3].image_url = qrImagePrefix + encodeURIComponent(verification_uri_complete)
     authDeviceCodeView.blocks[0].accessory.url = verification_uri_complete
     authDeviceCodeView.blocks[1].text.text = "Use Code "+user_code
