@@ -18,7 +18,7 @@ constructor(){
     scope: 'openid email profile offline_access read:demos manage:demos'
   })
   
-  this.DemoApiClient = new DemoApiClient('http://localhost:3000')
+  this.DemoApiClient = new DemoApiClient(process.env.DEMO_API_URL)
   
   this.slack = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -141,7 +141,7 @@ async demoCreate(client, userId, triggerId, appName){
   let response = await this.DemoApiClient.create({
     name:appName
   })
-  
+
   console.log(response)
   await this.sendDm(userId, 'Created Successfully!')
 }
