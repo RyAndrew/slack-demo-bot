@@ -18,7 +18,7 @@ constructor(){
     scope: 'openid email profile offline_access read:demos manage:demos'
   })
   
-  this.DemoApiClient = new DemoApiClient()
+  this.DemoApiClient = new DemoApiClient('http://localhost:3000')
   
   this.slack = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -57,6 +57,7 @@ async authenticate(client, userId, triggerId, resumeTask){
   let user = await this.userRead(userId)
   
   if(!user.authenticated){
+    await this.sendDm(userId, 'Not Authenticated, Please wait for Authentication')
 
     //adds auth data to user
     console.time('Authenticate')
