@@ -17,6 +17,7 @@ constructor(){
     audience: process.env.AUTH0_API_AUDIENCE,
     scope: 'openid email profile offline_access read:demos manage:demos'
   })
+  this.OauthDeviceAuthorization.Initialize()
   
   this.DemoApiClient = new DemoApiClient(process.env.DEMO_API_URL)
   

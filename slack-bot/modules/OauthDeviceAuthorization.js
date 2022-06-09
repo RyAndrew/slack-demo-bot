@@ -6,33 +6,33 @@ class OauthDeviceAuthorization {
   constructor(auth0Config){
     this.auth0Config = auth0Config
   }
-  
-  async Authenticate(client, triggerId, resumeTask){
-    const deviceCodeResponse = await this.RequestDeviceCode()
-  
-    this.RequestDeviceActivation(client, triggerId, deviceCodeResponse, resumeTask)
-  
-    return await this.RequestTokens(deviceCodeResponse)
-  }
-  async RequestDeviceCode(){
-
+  async Initialize(){
     console.time('Issuer.discover')
     const auth0 = await Issuer.discover(`https://${this.auth0Config.domain}`)
     console.timeEnd('Issuer.discover')
   
-    const client = new auth0.Client({
+    this.auth0Client = new auth0.Client({
         client_id: this.auth0Config.clientId,
         token_endpoint_auth_method: 'none',
         id_token_signed_response_alg: 'RS256',
     })
+  }
+  async Authenticate(client, triggerId, resumeTask){
+    const deviceCodeResponse = await this.RequestDeviceCode()
+  
+    await this.RequestDeviceActivation(client, triggerId, deviceCodeResponse, resumeTask)
+  
+    return await this.RequestTokens(deviceCodeResponse)
+  }
+  async RequestDeviceCode(){
   
     console.time('deviceAuthorization')
-    const handle = await client.deviceAuthorization({ scope: this.auth0Config.scope, audience: this.auth0Config.audience })
+    const handle = await this.auth0Client.deviceAuthorization({ scope: this.auth0Config.scope, audience: this.auth0Config.audience })
     console.timeEnd('deviceAuthorization')
 
     return handle
   }
-  RequestDeviceActivation(client, triggerId, DeviceCodeResponse, resumeTask){
+  async RequestDeviceActivation(client, triggerId, DeviceCodeResponse, resumeTask){
     const { verification_uri_complete, user_code, expires_in } = DeviceCodeResponse
   
     const qrImagePrefix = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl="
