@@ -8,13 +8,13 @@ const ManagementClient = require('auth0').ManagementClient
 
 require('dotenv').config()
 	
-app.use(express.json());  
+app.use(express.json())  
 
 const auth0 = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
   clientId: process.env.AUTH0_CLIENTID,
   clientSecret: process.env.AUTH0_CLIENTSECRET,
-  scope: 'read:clients update:clients delete:clients create:clients',
+  scope: 'read:clients update:clients delete:clients create:clients update:client_keys',
 })
 
 if (!process.env.ISSUER_BASE_URL || !process.env.AUDIENCE) {
@@ -53,9 +53,28 @@ app.post('/api/v1/demo', checkJwt, requiredScopes('manage:demos'), async functio
   res.json({"success":true})
 })
 
+app.post('/api/v1/demo/:clientId([A-Za-z0-9]{32})/rotate-secret', checkJwt, requiredScopes('manage:demos'), async function(req, res) {
+  console.log('rotate secret',req.params.clientId)
+  const response = await auth0.clients.rotateClientSecret({client_id:req.params.clientId})
+  res.json({"success":true})
+})
+
+app.patch('/api/v1/demo/:clientId([A-Za-z0-9]{32})', checkJwt, requiredScopes('manage:demos'), async function(req, res) {
+  console.log('update app',req.params.clientId,req.body)
+  const response = await auth0.updateClient({client_id: req.params.clientId},req.body)
+  res.json({"success":true})
+})
+
+app.get('/api/v1/demo/:clientId([A-Za-z0-9]{32})', checkJwt, requiredScopes('read:demos'), async function(req, res) {
+  console.log('read demo',req.params.clientId)
+  const client = await auth0.getClient({client_id:req.params.clientId})
+  res.json(client)
+})
+
 app.get('/api/v1/demo', checkJwt, requiredScopes('read:demos'), async function(req, res) {
+  console.log('read all demos')
   const clients = await auth0.getClients()
-  console.log('clients',clients)
+  
   let output = []
   clients.forEach(function(val){
     //filter default apps
@@ -63,7 +82,11 @@ app.get('/api/v1/demo', checkJwt, requiredScopes('read:demos'), async function(r
       return
     }
 
-    output.push({name:val.name,client_id:val.client_id})
+    output.push({
+      description: (val.description ? val.description : ''), 
+      name:val.name, 
+      client_id:val.client_id
+    })
   })
   res.json(output)
 })

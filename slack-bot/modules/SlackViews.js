@@ -63,7 +63,7 @@ class SlackViews {
     },
     "submit": {
         "type": "plain_text",
-        "text": "Submit"
+        "text": "Create"
     },
       "blocks": [
         {
@@ -76,6 +76,47 @@ class SlackViews {
           "label": {
             "type": "plain_text",
             "text": "Name of App",
+            "emoji": true
+          }
+        }
+      ]
+  }
+  
+  static updateAppView = {
+    "type": "modal",
+    "callback_id": "update-app-modal",
+    "title": {
+        "type": "plain_text",
+        "text": "Update App"
+    },
+    "submit": {
+        "type": "plain_text",
+        "text": "Save"
+    },
+      "blocks": [
+        {
+          "type": "input",
+          "block_id": "name",
+          "element": {
+            "type": "plain_text_input",
+            "action_id": "name"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Name",
+            "emoji": true
+          }
+        },
+        {
+          "type": "input",
+          "block_id": "description",
+          "element": {
+            "type": "plain_text_input",
+            "action_id": "description"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Description",
             "emoji": true
           }
         }
@@ -200,4 +241,4 @@ static homeTabView = {
   }
 }
 
-module.exports = SlackViews;
+module.exports = SlackViews

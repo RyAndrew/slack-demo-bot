@@ -18,7 +18,18 @@ class DemoApiClient {
       },
       data: newApp
     })
-    return response;
+    return response
+  }
+  async update(clientId, app){
+    const response = this.apiCall({
+      method: 'patch',
+      url: this.baseUrl+'/api/v1/demo/'+clientId,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: app
+    })
+    return response
   }
   async delete(clientId){
 
@@ -26,7 +37,24 @@ class DemoApiClient {
       method: 'delete',
       url: this.baseUrl+'/api/v1/demo/'+clientId
     })
-    return response;
+    return response
+  }
+  async rotateSecret(clientId){
+
+    const response = this.apiCall({
+      method: 'post',
+      url: this.baseUrl+'/api/v1/demo/'+clientId+'/rotate-secret'
+    })
+    return response
+  }
+  
+  async read(clientId){
+
+    const response = this.apiCall({
+      method: 'get',
+      url: this.baseUrl+'/api/v1/demo/'+clientId
+    })
+    return response
   }
   async readAllClients(){
 
@@ -34,7 +62,7 @@ class DemoApiClient {
       method: 'get',
       url: this.baseUrl+'/api/v1/demo'
     })
-    return response;
+    return response
   }
   async apiCall(request){
     if(request.headers){
@@ -45,7 +73,6 @@ class DemoApiClient {
     
     try{
       const response = await axios(request)
-      console.log('api response',response.data)
       return await response.data
     }catch(error){
       console.error(error)
@@ -54,4 +81,4 @@ class DemoApiClient {
   }
 }
 
-module.exports = DemoApiClient;
+module.exports = DemoApiClient

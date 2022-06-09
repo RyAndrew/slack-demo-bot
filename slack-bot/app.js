@@ -79,11 +79,10 @@ async demoList(client, userId, triggerId){
   await this.sendDm(userId, 'List Demo Apps / Clients')
 
   const user = await this.authenticate(client, userId, triggerId, 'demoList')
-  if(user === null){ return; }
+  if(user === null){ return }
 
   this.DemoApiClient.setAccessToken(user.tokens.access_token)
   let clients = await this.DemoApiClient.readAllClients()
-  console.log('list: ',clients)
 
   let slackBlocks = [
     {
@@ -98,51 +97,105 @@ async demoList(client, userId, triggerId){
     }
   ]
 
+let editAccessory = {
+  "type": "static_select",
+  "action_id": "manage-app",
+  "placeholder": {
+    "type": "plain_text",
+    "emoji": true,
+    "text": "Manage"
+  },
+  "options": [
+    {
+      "text": {
+        "type": "plain_text",
+        "emoji": true,
+        "text": "✏️ Edit App"
+      },
+      "value": "update-app"
+    },
+    {
+      "text": {
+        "type": "plain_text",
+        "emoji": true,
+        "text": "❌ Delete App"
+      },
+      "value": "delete-app"
+    },
+    {
+      "text": {
+        "type": "plain_text",
+        "emoji": true,
+        "text": "🗝️ Rotate Secret"
+      },
+      "value": "rotate-secret"
+    }
+  ]
+}
+
   clients.forEach(function(client){
+
     slackBlocks.push(
       {
         "type": "section",
+        "block_id": client.client_id,
         "text": {
-          "type": "plain_text",
-          "text": client.name
+          "type": "mrkdwn",
+          "text": `*${client.name}*\n${client.description}`
         },
-        "accessory": {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "Delete",
-            "emoji": true
-          },
-          "value": client.client_id,
-          "action_id": "list-delete-app"
-        }
+        "accessory": editAccessory
       }
     )
 
   })
 
-  //console.log(JSON.stringify(slackBlocks,null,4));
+  //console.log(JSON.stringify(slackBlocks,null,4))
 
   this.sendBlocks(user.userId, 'List of Apps', slackBlocks)
 }
+async demoUpdateShowModal(client, userId, triggerId, clientId){
+  await this.sendDm(userId, 'Update Demo '+clientId)
+
+  const user = await this.authenticate(client, userId, triggerId)
+  if(user === null){ return }
+
+  this.DemoApiClient.setAccessToken(user.tokens.access_token)
+  let app = await this.DemoApiClient.read(clientId)
+
+  let view = Object.assign({},SlackViews.updateAppView)
+  view.private_metadata = JSON.stringify({clientId:clientId})
+  view.blocks[0].element.initial_value = app.name
+  view.blocks[1].element.initial_value = app.description
+
+  client.views.open({trigger_id: triggerId, view:view})
+}
+async demoUpdate(client, userId, triggerId, clientId, app){
+
+  const user = await this.authenticate(client, userId, triggerId)
+  if(user === null){ return }
+
+  this.DemoApiClient.setAccessToken(user.tokens.access_token)
+  let response = await this.DemoApiClient.update(clientId, app)
+}
+
 async demoCreateShowModal(client, userId, triggerId){
   await this.sendDm(userId, 'Creating Demo')
 
   const user = await this.authenticate(client, userId, triggerId, 'demoCreateShowModal')
-  if(user === null){ return; }
+  if(user === null){ return }
 
   client.views.open({trigger_id: triggerId, view:SlackViews.createAppView})
 }
+
 async demoCreate(client, userId, triggerId, appName){
   const user = await this.authenticate(client, userId, triggerId, 'demoCreateShowModal')
-  if(user === null){ return; }
+  if(user === null){ return }
 
   this.DemoApiClient.setAccessToken(user.tokens.access_token)
   let response = await this.DemoApiClient.create({
     name:appName
   })
 
-  console.log(response)
   await this.sendDm(userId, 'Created Successfully!')
 }
 
@@ -150,12 +203,24 @@ async demoDelete(client, userId, triggerId, client_id){
   await this.sendDm(userId, 'Deleting Demo client_id '+client_id)
 
   const user = await this.authenticate(client, userId, triggerId)
-  if(user === null){ return; }
+  if(user === null){ return }
 
   this.DemoApiClient.setAccessToken(user.tokens.access_token)
   this.DemoApiClient.delete(client_id)
 
   this.demoList(client, userId, triggerId)
+}
+
+async demoRotateSecret(client, userId, triggerId, client_id){
+  await this.sendDm(userId, 'Rotating Secret for client_id '+client_id)
+
+  const user = await this.authenticate(client, userId, triggerId)
+  if(user === null){ return }
+
+  this.DemoApiClient.setAccessToken(user.tokens.access_token)
+  this.DemoApiClient.rotateSecret(client_id)
+
+  await this.sendDm(userId, 'Rotating Secret Complete')
 }
 
 async sendDm(userId, text){
@@ -199,20 +264,34 @@ resumeTask(task, body, client){
   switch(task){
     case 'demoList':
       this.demoList(client, body.user.id, body.trigger_id)
-      break;
+      break
     case 'demoCreateShowModal':
       this.demoCreateShowModal(client, body.user.id, body.trigger_id)
   }
 }
 
 setupListeners(){
-  // this.slack.view( 'tenant-info', async ({payload, ack, client}) => {
-  //   await ack()
-  //   console.log('tenant-info view_submission',payload)
-  // })
-  
+  this.slack.view( 'tenant-info', async ({payload, ack, client}) => {
+    await ack()
+    console.log('tenant-info view_submission',payload)
+  })
+
+  this.slack.view( 'update-app-modal', async ({body, ack, client}) => {
+    console.log('view update-app-modalview_submission', )
+    await ack()
+
+    let updates = {
+      name: body.view.state.values.name.name.value,
+      description: body.view.state.values.description.description.value
+    }
+
+    const private_metadata = JSON.parse(body.view.private_metadata)
+    
+    this.demoUpdate(client, body.user.id, body.trigger_id, private_metadata.clientId, updates)
+  })
+
   this.slack.view( 'create-app', async ({body, ack, client}) => {
-    console.log('view create-app view_submission',body.view.state.values )
+    console.log('view create-app view_submission')
     await ack()
     this.demoCreate(client, body.user.id, body.trigger_id, body.view.state.values['create-app-name']['create-app-name'].value)
   })
@@ -230,6 +309,22 @@ setupListeners(){
         if(private_metadata.resumeTask){
           this.resumeTask(private_metadata.resumeTask, body, client)
         }
+    }
+  })
+  
+  this.slack.action( 'manage-app', async ({body, ack, client}) => {
+    console.log('action manage-app')
+    await ack()
+    switch(body.actions[0].selected_option.value){
+      case 'update-app':
+        this.demoUpdateShowModal(client, body.user.id, body.trigger_id, body.actions[0].block_id)
+        break
+      case 'rotate-secret':
+        this.demoRotateSecret(client, body.user.id, body.trigger_id, body.actions[0].block_id)
+        break
+      case 'delete-app':
+        this.demoDelete(client, body.user.id, body.trigger_id, body.actions[0].block_id)
+        break
     }
   })
   
@@ -287,20 +382,13 @@ setupListeners(){
   
   
   this.slack.command('/demos', async ({body, ack, client, say}) => {
+    console.log('demos cmd')
   
     await ack()
-  
-    console.log('demos cmd')
-    //console.log('body',body)
-    //console.log('client',client)
+      
     switch(body.text){
       default:
-        await say('valid prompts are: showauth, login, create, read, list, update, delete')
-        break
-      case 'create':
-        this.demoCreateShowModal(client, body.user_id, body.trigger_id)
-        break
-      case 'read':
+        await say('valid prompts are: showauth, login, create, list')
         break
       case 'showauth':
         this.sendAuthStateDm(body.user_id)
@@ -308,10 +396,11 @@ setupListeners(){
       case 'login':
         this.authenticate(client, body.user_id, body.trigger_id)
         break
+      case 'create':
+        this.demoCreateShowModal(client, body.user_id, body.trigger_id)
+        break
       case 'list':
         this.demoList(client, body.user_id, body.trigger_id)
-        break
-      case 'delete':
         break
       case 'settenant':
         client.views.open({trigger_id: body.trigger_id, view:tenantInputView})
